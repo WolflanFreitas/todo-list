@@ -1,37 +1,30 @@
-import React, { useState } from "react";
-import { MdDelete } from "react-icons/md";
+import React, { useEffect, useState } from "react";
 import "./App.css";
+import NewTodo from "./components/NewTodo";
+import TodoList from "./components/TodoList";
 
 const App = () => {
-  const [todo, setTodo] = useState("");
   const [todos, setTodos] = useState([]);
 
-  const onChangeTodo = (event) => {
-    setTodo(event.target.value);
-  };
-
-  const eraseTodo = () => {
-    setTodo("");
-  };
-
-  const submit = () => {
-    setTodos([
-      ...todos,
-      {
-        id: new Date().getTime(),
-        title: todo,
-        completed: false,
-      },
-    ]);
-    eraseTodo();
-  };
-
-  const onKeyDownTodo = (event) => {
-    if (event.key === "Enter") {
-      submit();
-    } else if (event.key === "Escape") {
-      eraseTodo();
+  useEffect(() => {
+    const storedTodos = localStorage.getItem("todos");
+    if (storedTodos) {
+      setTodos(JSON.parse(storedTodos));
     }
+  }, []);
+
+  const onNewTodo = (todo) => {
+    const newItem = {
+      id: new Date().getTime(),
+      title: todo,
+      completed: false,
+    };
+
+    // Atualize o estado com o novo item
+    setTodos((prevTodos) => [...prevTodos, newItem]);
+
+    // Salve os dados atualizados no local storage
+    localStorage.setItem("todos", JSON.stringify([...todos, newItem]));
   };
 
   const onToggle = (todo) => {
@@ -51,6 +44,8 @@ const App = () => {
     });
 
     setTodos(newTodos);
+
+    localStorage.setItem("todos", JSON.stringify(newTodos));
   };
 
   return (
@@ -59,39 +54,8 @@ const App = () => {
         <h1 className="title">Lista de Tarefas</h1>
       </header>
       <section className="main">
-        <input
-          className="new-todo"
-          placeholder="O que precisa ser feito?"
-          value={todo}
-          onChange={onChangeTodo}
-          onKeyDown={onKeyDownTodo}
-        />
-        <ul className="todo-list">
-          {todos.map((todo) => (
-            <li key={todo.id.toString()}>
-              <span
-                onClick={() => {
-                  onToggle(todo);
-                }}
-                role="button"
-                className={`todo ${todo.completed ? "completed" : ""}`}
-                aria-hidden="true"
-                tabIndex={0}
-              >
-                {todo?.title}
-              </span>
-              <button
-                className="remove"
-                type="button"
-                onClick={() => {
-                  onRemove(todo);
-                }}
-              >
-                <MdDelete size={28} />
-              </button>
-            </li>
-          ))}
-        </ul>
+        <NewTodo onNewTodo={onNewTodo} />
+        <TodoList todos={todos} onToggle={onToggle} onRemove={onRemove} />
       </section>
     </section>
   );
